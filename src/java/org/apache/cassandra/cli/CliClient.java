@@ -17,6 +17,31 @@
  */
 package org.apache.cassandra.cli;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
+import org.antlr.runtime.tree.Tree;
+import org.apache.cassandra.auth.IAuthenticator;
+import org.apache.cassandra.db.ColumnFamilyStoreMBean;
+import org.apache.cassandra.db.compaction.CompactionManagerMBean;
+import org.apache.cassandra.db.compaction.OperationType;
+import org.apache.cassandra.db.marshal.*;
+import org.apache.cassandra.exceptions.RequestValidationException;
+import org.apache.cassandra.io.util.FileUtils;
+import org.apache.cassandra.locator.SimpleSnitch;
+import org.apache.cassandra.serializers.MarshalException;
+import org.apache.cassandra.thrift.*;
+import org.apache.cassandra.tools.NodeProbe;
+import org.apache.cassandra.utils.ByteBufferUtil;
+import org.apache.cassandra.utils.FBUtilities;
+import org.apache.cassandra.utils.UUIDGen;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.thrift.TBaseHelper;
+import org.apache.thrift.TException;
+import org.codehaus.jackson.*;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,33 +52,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
-
-import org.apache.cassandra.serializers.MarshalException;
-import org.apache.commons.lang3.StringUtils;
-
-import org.antlr.runtime.tree.Tree;
-import org.apache.cassandra.auth.IAuthenticator;
-import org.apache.cassandra.exceptions.RequestValidationException;
-import org.apache.cassandra.db.ColumnFamilyStoreMBean;
-import org.apache.cassandra.db.compaction.CompactionManagerMBean;
-import org.apache.cassandra.db.compaction.OperationType;
-import org.apache.cassandra.db.marshal.*;
-import org.apache.cassandra.io.util.FileUtils;
-import org.apache.cassandra.locator.SimpleSnitch;
-import org.apache.cassandra.thrift.*;
-import org.apache.cassandra.tools.NodeProbe;
-import org.apache.cassandra.utils.ByteBufferUtil;
-import org.apache.cassandra.utils.FBUtilities;
-import org.apache.cassandra.utils.UUIDGen;
-import org.apache.thrift.TBaseHelper;
-import org.apache.thrift.TException;
-import org.codehaus.jackson.*;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
 
 // Cli Client Side Library
 public class CliClient
@@ -73,7 +71,8 @@ public class CliClient
         UTF8          (UTF8Type.instance),
         ASCII         (AsciiType.instance),
         DOUBLE        (DoubleType.instance),
-        COUNTERCOLUMN (CounterColumnType.instance);
+        COUNTERCOLUMN (CounterColumnType.instance),
+        GZIPBASE64    (GZIPBase64Type.instance);
 
         private AbstractType<?> validator;
 
@@ -195,6 +194,7 @@ public class CliClient
     public void printBanner()
     {
         sessionState.out.println("Welcome to Cassandra CLI version " + FBUtilities.getReleaseVersionString() + "\n");
+        sessionState.out.println("**** VERSION MODIFIED BY SRIKANTH SESHADRI **** \n");
 
         sessionState.out.println("The CLI is deprecated and will be removed in Cassandra 3.0.  Consider migrating to cqlsh.");
         sessionState.out.println("CQL is fully backwards compatible with Thrift data; see http://www.datastax.com/dev/blog/thrift-to-cql3\n");

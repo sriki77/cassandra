@@ -24,7 +24,7 @@ public class AsciiSerializer extends AbstractTextSerializer
 {
     public static final AsciiSerializer instance = new AsciiSerializer();
 
-    private AsciiSerializer()
+    protected AsciiSerializer()
     {
         super(StandardCharsets.US_ASCII);
     }

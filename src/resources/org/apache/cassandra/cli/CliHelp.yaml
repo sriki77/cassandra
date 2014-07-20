@@ -974,6 +974,7 @@ commands:
             - LexicalUUIDType
             - LongType
             - UTF8Type
+            - GZIPBase64Type
 
         - value: The value to test the column for, if a function is provided the
         value is parsed by the function. Otherwise the meta data for the target
